@@ -31,6 +31,7 @@ DEFAULT_PRIVKEY_FILE=${PRIVKEY_FILENAME:-"privkey.pem"};
 DEFAULT_CERT_FILE=${CERT_FILENAME:-"certs.pem"};
 DEFAULT_CHAIN_FILE=${CHAIN_FILENAME:-"fullchain.pem"};
 DEFAULT_SECRET_FILE=${SECRET_FILENAME:-"secret.txt"};
+DEFAULT_CACHED_CNF=${CACHED_CNF_FILENAME:-"openssl.cnf"};
 
 # ANSI Color Codes
 CYAN='\033[0;36m'
@@ -101,7 +102,7 @@ print_help() {
     echo -e "  ${GREEN}--output-dir${RESET}       Output directory for the generated certificates (e.g., ./my_certs)";
     echo -e "  ${GREEN}--force${RESET}            Overwrite existing certificate and key if they exist";
   elif [[ "$cmd" == "certs" ]]; then
-    echo -e "Usage: $0 ${CYAN}certs${RESET} ${GREEN}--ca <ca-name>${RESET} ${GREEN}--name <cname>${RESET} ${GREEN}--purpose <server|client>${RESET} [${GREEN}--expiration <Nd|Nw|Nm|Ny>${RESET}] [${GREEN}--cipher <cipher>${RESET}] [${GREEN}--no-password${RESET}] [${GREEN}--random-password${RESET}] [${GREEN}--output-dir <dir>${RESET}] [${GREEN}--force${RESET}]";
+    echo -e "Usage: $0 ${CYAN}certs${RESET} ${GREEN}--ca <ca-name>${RESET} ${GREEN}--name <cname>${RESET} ${GREEN}--purpose <server|client>${RESET} [${GREEN}--expiration <Nd|Nw|Nm|Ny>${RESET}] [${GREEN}--cipher <cipher>${RESET}] [${GREEN}--no-password${RESET}] [${GREEN}--random-password${RESET}] [${GREEN}--openssl-config-file <path>${RESET}] [${GREEN}--output-dir <dir>${RESET}] [${GREEN}--force${RESET}]";
     echo "Generate Server or Client certificates signed by a CA.";
     echo -e "${BOLD}Required Options:${RESET}";
     echo -e "  ${GREEN}--ca${RESET}               Filepath prefix or CNAME of the issuing CA (e.g., \"My Intermediate CA\")";
@@ -112,6 +113,7 @@ print_help() {
     echo -e "  ${GREEN}--cipher${RESET}           Encryption cipher for private key (e.g., aes256) (default: ${DEFAULT_CIPHER})";
     echo -e "  ${GREEN}--no-password${RESET}      Do not encrypt the private key (Default for server/client certs)";
     echo -e "  ${GREEN}--random-password${RESET}  Generate a random password and store it in ${SECRET_FILENAME}";
+    echo -e "  ${GREEN}--openssl-config-file${RESET} Provide a custom OpenSSL configuration file";
     echo -e "  ${GREEN}--output-dir${RESET}       Output directory for the generated certificates (e.g., ./my_certs)";
     echo -e "  ${GREEN}--force${RESET}            Overwrite existing certificate and key if they exist";
   elif [[ "$cmd" == "info" ]]; then
@@ -120,10 +122,12 @@ print_help() {
     echo -e "${BOLD}Optional Arguments:${RESET}";
     echo -e "  ${GREEN}cname${RESET}              Provide a Common Name substring to view detailed certificate text";
   elif [[ "$cmd" == "renew" ]]; then
-    echo -e "Usage: $0 ${CYAN}renew${RESET} ${GREEN}--name <cname>${RESET}";
+    echo -e "Usage: $0 ${CYAN}renew${RESET} ${GREEN}--name <cname>${RESET} [${GREEN}--openssl-config-file <path>${RESET}]";
     echo "Renew an existing certificate, keeping its existing key and CSR.";
     echo -e "${BOLD}Required Options:${RESET}";
     echo -e "  ${GREEN}--name${RESET}             Common Name for the certificate to renew (e.g., \"demo.example.com\")";
+    echo -e "${BOLD}Optional Options:${RESET}";
+    echo -e "  ${GREEN}--openssl-config-file${RESET} Provide a custom OpenSSL configuration file (required if original cert used one)";
   else
     echo -e "Usage: $0 ${CYAN}<subcommand>${RESET} [${GREEN}options${RESET}]";
     echo -e "${BOLD}Subcommands:${RESET}";
@@ -305,6 +309,8 @@ cmd_rootca() {
 
   cp "$cert_file" "$chain_file"
 
+  cp "$OPENSSL_CNF" "$OUT_CERT_DIR/$DEFAULT_CACHED_CNF"
+
   echo -e "Root CA created at ${GREEN}${cert_file}${RESET}";
 }
 
@@ -368,7 +374,8 @@ cmd_intermediate() {
 
   openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "$cert_file" -days "$days" -extfile "$OPENSSL_CNF" -extensions v3_intermediate_ca;
 
-  cat "$cert_file" "$CA_CHAIN" > "$chain_file"
+  cat "$CA_CHAIN" "$cert_file" > "$chain_file"
+  cp "$OPENSSL_CNF" "$OUT_CERT_DIR/$DEFAULT_CACHED_CNF"
 
   echo -e "Intermediate CA created at ${GREEN}${cert_file}${RESET}";
 }
@@ -382,6 +389,7 @@ cmd_certs() {
   local custom_out_dir="";
   local force="";
   local random_pass="";
+  local custom_cnf="";
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -392,6 +400,7 @@ cmd_certs() {
       --cipher) cipher="$2"; shift 2;;
       --no-password) no_pass="true"; shift 1;;
       --random-password) random_pass="true"; shift 1;;
+      --openssl-config-file) custom_cnf="$2"; shift 2;;
       --output-dir) custom_out_dir="$2"; shift 2;;
       --force) force="true"; shift 1;;
       --help) print_help certs; exit 0;;
@@ -441,16 +450,26 @@ cmd_certs() {
   local cert_file="$OUT_CERT_DIR/$DEFAULT_CERT_FILE";
   local chain_file="$OUT_CERT_DIR/$DEFAULT_CHAIN_FILE";
 
+  local conf_file="${custom_cnf:-$OPENSSL_CNF}";
+  if [[ -n "$custom_cnf" ]] && [[ ! -f "$custom_cnf" ]]; then
+    echo "Error: OpenSSL config file $custom_cnf not found." >&2;
+    exit 1;
+  fi;
+
   echo -e "Generating $purpose certificate: ${CYAN}${name}${RESET} signed by ${MAGENTA}${ca_name}${RESET}";
+  if [[ -n "$custom_cnf" ]]; then
+    echo "Using custom OpenSSL config: $custom_cnf";
+  fi;
   openssl genpkey -algorithm $DEFAULT_ASYM_ALGO $OUT_CIPHER_OPT $OUT_PASS_GEN -out "$key_file";
 
-  openssl req -new -key "$key_file" $OUT_PASS_IN -out "$csr_file" -subj "/CN=${name}" -config "$OPENSSL_CNF";
+  openssl req -new -key "$key_file" $OUT_PASS_IN -out "$csr_file" -subj "/CN=${name}" -config "$conf_file";
 
   local ext="${purpose}_cert";
 
-  openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "$cert_file" -days "$days" -extfile "$OPENSSL_CNF" -extensions "$ext";
+  openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "$cert_file" -days "$days" -extfile "$conf_file" -extensions "$ext";
 
-  cat "$cert_file" "$CA_CHAIN" > "$chain_file"
+  cat "$CA_CHAIN" "$cert_file" > "$chain_file"
+  cp "$conf_file" "$OUT_CERT_DIR/$DEFAULT_CACHED_CNF"
 
   echo -e "$purpose certificate created at ${GREEN}${cert_file}${RESET}";
 }
@@ -581,9 +600,11 @@ cmd_info() {
 
 cmd_renew() {
   local name=""
+  local custom_cnf=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --name) name="$2"; shift 2;;
+      --openssl-config-file) custom_cnf="$2"; shift 2;;
       --help) print_help renew; exit 0;;
       *) echo "Unknown option $1" >&2; print_help renew; exit 1;;
     esac
@@ -598,6 +619,15 @@ cmd_renew() {
   local csr_file="$cert_dir/request.csr"
   local key_file="$cert_dir/$DEFAULT_PRIVKEY_FILE"
   local chain_file="$cert_dir/$DEFAULT_CHAIN_FILE"
+
+  local cached_conf="$cert_dir/$DEFAULT_CACHED_CNF"
+  local conf_file="$OPENSSL_CNF"
+  if [[ -n "$custom_cnf" ]]; then
+    conf_file="$custom_cnf"
+  elif [[ -f "$cached_conf" ]]; then
+    conf_file="$cached_conf"
+    echo "Using cached OpenSSL config: $cached_conf"
+  fi
 
   if [[ ! -f "$cert_file" ]] || [[ ! -f "$key_file" ]]; then
     # Fallback to old format
@@ -617,7 +647,7 @@ cmd_renew() {
     local pass_in;
     pass_in=$(get_ca_pass_in "$name")
 
-    openssl req -x509 -new -key "$key_file" $pass_in -days "$days" -out "${cert_file}.new" -subj "/CN=${name}" -extensions v3_ca -config "$OPENSSL_CNF"
+    openssl req -x509 -new -key "$key_file" $pass_in -days "$days" -out "${cert_file}.new" -subj "/CN=${name}" -extensions v3_ca -config "$conf_file"
     mv "${cert_file}.new" "$cert_file"
     cp "$cert_file" "$chain_file" 2>/dev/null || true
     echo -e "Root CA renewed at ${GREEN}${cert_file}${RESET}"
@@ -641,12 +671,12 @@ cmd_renew() {
     if [[ ! -f "$csr_file" ]]; then
        local pass_in;
        pass_in=$(get_ca_pass_in "$name")
-       openssl req -new -key "$key_file" $pass_in -out "$csr_file" -subj "/CN=${name}" -config "$OPENSSL_CNF"
+       openssl req -new -key "$key_file" $pass_in -out "$csr_file" -subj "/CN=${name}" -config "$conf_file"
     fi
 
-    openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "${cert_file}.new" -days "$days" -extfile "$OPENSSL_CNF" -extensions "$ext"
+    openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "${cert_file}.new" -days "$days" -extfile "$conf_file" -extensions "$ext"
     mv "${cert_file}.new" "$cert_file"
-    cat "$cert_file" "$CA_CHAIN" > "$chain_file" 2>/dev/null || true
+    cat "$CA_CHAIN" "$cert_file" > "$chain_file" 2>/dev/null || true
     echo -e "Certificate renewed at ${GREEN}${cert_file}${RESET}"
   fi
 }
@@ -661,7 +691,7 @@ shift;
 
 case "$COMMAND" in
   rootca) cmd_rootca "$@";;
-  intermediate|intermedicate) cmd_intermediate "$@";;
+  intermediate) cmd_intermediate "$@";;
   certs) cmd_certs "$@";;
   info) cmd_info "$@";;
   renew) cmd_renew "$@";;
