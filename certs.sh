@@ -374,7 +374,7 @@ cmd_intermediate() {
 
   openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "$cert_file" -days "$days" -extfile "$OPENSSL_CNF" -extensions v3_intermediate_ca;
 
-  cat "$CA_CHAIN" "$cert_file" > "$chain_file"
+  cat "$cert_file" "$CA_CHAIN" > "$chain_file"
   cp "$OPENSSL_CNF" "$OUT_CERT_DIR/$DEFAULT_CACHED_CNF"
 
   echo -e "Intermediate CA created at ${GREEN}${cert_file}${RESET}";
@@ -468,7 +468,7 @@ cmd_certs() {
 
   openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "$cert_file" -days "$days" -extfile "$conf_file" -extensions "$ext";
 
-  cat "$CA_CHAIN" "$cert_file" > "$chain_file"
+  cat "$cert_file" "$CA_CHAIN" > "$chain_file"
   cp "$conf_file" "$OUT_CERT_DIR/$DEFAULT_CACHED_CNF"
 
   echo -e "$purpose certificate created at ${GREEN}${cert_file}${RESET}";
@@ -676,7 +676,7 @@ cmd_renew() {
 
     openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "${cert_file}.new" -days "$days" -extfile "$conf_file" -extensions "$ext"
     mv "${cert_file}.new" "$cert_file"
-    cat "$CA_CHAIN" "$cert_file" > "$chain_file" 2>/dev/null || true
+    cat "$cert_file" "$CA_CHAIN" > "$chain_file" 2>/dev/null || true
     echo -e "Certificate renewed at ${GREEN}${cert_file}${RESET}"
   fi
 }
