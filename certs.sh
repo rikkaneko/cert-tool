@@ -81,45 +81,45 @@ print_help() {
     echo -e "Usage: $0 ${CYAN}rootca${RESET} ${GREEN}--name <cname>${RESET} [${GREEN}--expiration <Nd|Nw|Nm|Ny>${RESET}] [${GREEN}--cipher <cipher>${RESET}] [${GREEN}--no-password${RESET}] [${GREEN}--password-file <path>${RESET}] [${GREEN}--output-dir <dir>${RESET}] [${GREEN}--force${RESET}]";
     echo "Generate a Root CA.";
     echo -e "${BOLD}Required Options:${RESET}";
-    echo -e "  ${GREEN}--name${RESET}             Common Name for the Root CA (e.g., \"My Trusted Root CA\")";
+    echo -e "  ${GREEN}--name${RESET}                      Common Name for the Root CA (e.g., \"My Trusted Root CA\")";
     echo -e "${BOLD}Optional Options:${RESET}";
-    echo -e "  ${GREEN}--expiration${RESET}       Expiration time (e.g., 30d, 1w, 6m, 1y) (default: ${DEFAULT_CA_DAYS}d)";
-    echo -e "  ${GREEN}--cipher${RESET}           Encryption cipher for private key (e.g., aes256, aes128, none) (default: ${DEFAULT_CIPHER})";
-    echo -e "  ${GREEN}--no-password${RESET}      Do not encrypt the private key (otherwise a password is auto-generated)";
-    echo -e "  ${GREEN}--password-file${RESET}    Provide a custom password file path (e.g., /path/to/pass.txt)";
-    echo -e "  ${GREEN}--output-dir${RESET}       Output directory for the generated certificates (e.g., ./my_certs)";
-    echo -e "  ${GREEN}--force${RESET}            Overwrite existing certificate and key if they exist";
+    echo -e "  ${GREEN}--expiration${RESET}                Expiration time (e.g., 30d, 1w, 6m, 1y) (default: ${DEFAULT_CA_DAYS}d)";
+    echo -e "  ${GREEN}--cipher${RESET}                    Encryption cipher for private key (e.g., aes256, aes128, none) (default: ${DEFAULT_CIPHER})";
+    echo -e "  ${GREEN}--no-password${RESET}               Do not encrypt the private key (otherwise a password is auto-generated)";
+    echo -e "  ${GREEN}--password-file${RESET}             Provide a custom password file path (e.g., /path/to/pass.txt)";
+    echo -e "  ${GREEN}--output-dir${RESET}                Output directory for the generated certificates (e.g., ./my_certs)";
+    echo -e "  ${GREEN}--force${RESET}                     Overwrite existing certificate and key if they exist";
   elif [[ "$cmd" == "intermediate" ]]; then
     echo -e "Usage: $0 ${CYAN}intermediate${RESET} ${GREEN}--ca <ca-name>${RESET} ${GREEN}--name <cname>${RESET} [${GREEN}--expiration <Nd|Nw|Nm|Ny>${RESET}] [${GREEN}--cipher <cipher>${RESET}] [${GREEN}--no-password${RESET}] [${GREEN}--password-file <path>${RESET}] [${GREEN}--output-dir <dir>${RESET}] [${GREEN}--force${RESET}]";
     echo "Generate an Intermediate CA signed by the Root CA.";
     echo -e "${BOLD}Required Options:${RESET}";
-    echo -e "  ${GREEN}--ca${RESET}               Filepath prefix or CNAME matching the previously generated CA (e.g., \"My Trusted Root CA\")";
-    echo -e "  ${GREEN}--name${RESET}             Common Name for the Intermediate CA (e.g., \"My Intermediate CA\")";
+    echo -e "  ${GREEN}--ca${RESET}                        Filepath prefix or CNAME matching the previously generated CA (e.g., \"My Trusted Root CA\")";
+    echo -e "  ${GREEN}--name${RESET}                      Common Name for the Intermediate CA (e.g., \"My Intermediate CA\")";
     echo -e "${BOLD}Optional Options:${RESET}";
-    echo -e "  ${GREEN}--expiration${RESET}       Expiration time (e.g., 365d, 1y) (default: ${DEFAULT_CA_DAYS}d)";
-    echo -e "  ${GREEN}--cipher${RESET}           Encryption cipher for private key (e.g., aes256, none) (default: ${DEFAULT_CIPHER})";
-    echo -e "  ${GREEN}--no-password${RESET}      Do not encrypt the private key";
-    echo -e "  ${GREEN}--password-file${RESET}    Provide a custom password file path (e.g., /path/to/pass.txt)";
-    echo -e "  ${GREEN}--output-dir${RESET}       Output directory for the generated certificates (e.g., ./my_certs)";
-    echo -e "  ${GREEN}--force${RESET}            Overwrite existing certificate and key if they exist";
+    echo -e "  ${GREEN}--expiration${RESET}                Expiration time (e.g., 365d, 1y) (default: ${DEFAULT_CA_DAYS}d)";
+    echo -e "  ${GREEN}--cipher${RESET}                    Encryption cipher for private key (e.g., aes256, none) (default: ${DEFAULT_CIPHER})";
+    echo -e "  ${GREEN}--no-password${RESET}               Do not encrypt the private key";
+    echo -e "  ${GREEN}--password-file${RESET}             Provide a custom password file path (e.g., /path/to/pass.txt)";
+    echo -e "  ${GREEN}--output-dir${RESET}                Output directory for the generated certificates (e.g., ./my_certs)";
+    echo -e "  ${GREEN}--force${RESET}                     Overwrite existing certificate and key if they exist";
   elif [[ "$cmd" == "certs" ]]; then
     echo -e "Usage: $0 ${CYAN}certs${RESET} ${GREEN}--ca <ca-name>${RESET} ${GREEN}--name <cname>${RESET} ${GREEN}--purpose <server|client>${RESET} [${GREEN}--expiration <Nd|Nw|Nm|Ny>${RESET}] [${GREEN}--cipher <cipher>${RESET}] [${GREEN}--no-password${RESET}] [${GREEN}--random-password${RESET}] [${GREEN}--openssl-config-file <path>${RESET}] [${GREEN}--output-dir <dir>${RESET}] [${GREEN}--force${RESET}]";
     echo "Generate Server or Client certificates signed by a CA.";
     echo -e "${BOLD}Required Options:${RESET}";
-    echo -e "  ${GREEN}--ca${RESET}               Filepath prefix or CNAME of the issuing CA (e.g., \"My Intermediate CA\")";
-    echo -e "  ${GREEN}--name${RESET}             Common Name for the certificate (e.g., \"demo.example.com\")";
-    echo -e "  ${GREEN}--purpose${RESET}          Must be 'server' or 'client'";
+    echo -e "  ${GREEN}--ca${RESET}                        Filepath prefix or CNAME of the issuing CA (e.g., \"My Intermediate CA\")";
+    echo -e "  ${GREEN}--name${RESET}                      Common Name for the certificate (e.g., \"demo.example.com\")";
+    echo -e "  ${GREEN}--purpose${RESET}                   Must be 'server' or 'client'";
     echo -e "${BOLD}Optional Options:${RESET}";
-    echo -e "  ${GREEN}--expiration${RESET}       Expiration time (e.g., 30d, 1y) (default: ${DEFAULT_CERT_DAYS}d)";
-    echo -e "  ${GREEN}--cipher${RESET}           Encryption cipher for private key (e.g., aes256) (default: ${DEFAULT_CIPHER})";
-    echo -e "  ${GREEN}--no-password${RESET}      Do not encrypt the private key [Default for server/client certs]";
-    echo -e "  ${GREEN}--random-password${RESET}  Generate a random password and store it in ${SECRET_FILENAME}";
-    echo -e "  ${GREEN}--openssl-config-file${RESET} Provide a custom OpenSSL configuration file";
-    echo -e "  ${GREEN}--install-fullchain${RESET}  Path to install the full certificate chain";
-    echo -e "  ${GREEN}--install-privkey${RESET}    Path to install the private key";
-    echo -e "  ${GREEN}--post-script${RESET}        Script to run after generation (receives cert dir as \$1)";
-    echo -e "  ${GREEN}--output-dir${RESET}       Output directory for the generated certificates (e.g., ./my_certs)";
-    echo -e "  ${GREEN}--force${RESET}            Overwrite existing certificate and key if they exist";
+    echo -e "  ${GREEN}--expiration${RESET}                Expiration time (e.g., 30d, 1y) (default: ${DEFAULT_CERT_DAYS}d)";
+    echo -e "  ${GREEN}--cipher${RESET}                    Encryption cipher for private key (e.g., aes256) (default: ${DEFAULT_CIPHER})";
+    echo -e "  ${GREEN}--no-password${RESET}               Do not encrypt the private key [Default for server/client certs]";
+    echo -e "  ${GREEN}--random-password${RESET}           Generate a random password and store it in ${SECRET_FILENAME}";
+    echo -e "  ${GREEN}--openssl-config-file${RESET}       Provide a custom OpenSSL configuration file";
+    echo -e "  ${GREEN}--install-fullchain${RESET}         Path to install the full certificate chain";
+    echo -e "  ${GREEN}--install-privkey${RESET}           Path to install the private key";
+    echo -e "  ${GREEN}--post-script${RESET}               Script to run after generation (receives cert dir as \$1)";
+    echo -e "  ${GREEN}--output-dir${RESET}                Output directory for the generated certificates (e.g., ./my_certs)";
+    echo -e "  ${GREEN}--force${RESET}                     Overwrite existing certificate and key if they exist";
   elif [[ "$cmd" == "info" ]]; then
     echo -e "Usage: $0 ${CYAN}info${RESET} [${GREEN}cname${RESET}]";
     echo "Display valid certificates, their expiration dates, and issuers.";
@@ -129,12 +129,12 @@ print_help() {
     echo -e "Usage: $0 ${CYAN}renew${RESET} ${GREEN}--name <cname>${RESET} [${GREEN}--openssl-config-file <path>${RESET}]";
     echo "Renew an existing certificate, keeping its existing key and CSR.";
     echo -e "${BOLD}Required Options:${RESET}";
-    echo -e "  ${GREEN}--name${RESET}             Common Name for the certificate to renew (e.g., \"demo.example.com\")";
+    echo -e "  ${GREEN}--name${RESET}                      Common Name for the certificate to renew (e.g., \"demo.example.com\")";
     echo -e "${BOLD}Optional Options:${RESET}";
-    echo -e "  ${GREEN}--openssl-config-file${RESET} Provide a custom OpenSSL configuration file (required if original cert used one)";
-    echo -e "  ${GREEN}--install-fullchain${RESET}  Path to install the full certificate chain (overrides cache)";
-    echo -e "  ${GREEN}--install-privkey${RESET}    Path to install the private key (overrides cache)";
-    echo -e "  ${GREEN}--post-script${RESET}        Script to run after renewal (overrides cache)";
+    echo -e "  ${GREEN}--openssl-config-file${RESET}       Provide a custom OpenSSL configuration file (required if original cert used one)";
+    echo -e "  ${GREEN}--install-fullchain${RESET}          Path to install the full certificate chain (overrides cache)";
+    echo -e "  ${GREEN}--install-privkey${RESET}            Path to install the private key (overrides cache)";
+    echo -e "  ${GREEN}--post-script${RESET}                Script to run after renewal (overrides cache)";
   else
     echo -e "Usage: $0 ${CYAN}<subcommand>${RESET} [${GREEN}options${RESET}]";
     echo -e "${BOLD}Subcommands:${RESET}";
@@ -580,62 +580,72 @@ cmd_info() {
     exit 0
   fi
 
-  local ca_names=() ca_dates=() ca_issuers=()
-  local client_names=() client_dates=() client_issuers=()
-
-  local max_name=4
-  local max_date=20
-  local max_issuer=6
+  local ca_names=() ca_dates=() ca_issuers=() ca_types=()
+  local client_names=() client_dates=() client_issuers=() client_types=()
+  local max_name=4 max_date=18 max_issuer=6 max_type=4
   local total_certs=0
 
-  # Find all PEMs in OUTPUT_DIR and parse properties
   while IFS= read -r cert; do
     local filename;
     filename=$(basename "$cert")
     if [[ "$filename" == "$DEFAULT_CHAIN_FILE" ]]; then continue; fi
     if [[ "$filename" != "${target_name:-*}.pem" ]] && [[ "$filename" != "$DEFAULT_CERT_FILE" ]] && [[ "$filename" != "*_*.pem" ]]; then continue; fi
 
-    local is_ca;
+    local name issuer is_ca ext_usage
+    name=$(openssl x509 -in "$cert" -noout -subject -nameopt sep_multiline | grep -i "^ *CN=" | sed 's/^ *CN=//' || echo "Unknown")
+    issuer=$(openssl x509 -in "$cert" -noout -issuer -nameopt sep_multiline | grep -i "^ *CN=" | sed 's/^ *CN=//' || echo "Unknown")
+    
+    local type="unknown"
     is_ca=$(openssl x509 -in "$cert" -noout -ext basicConstraints 2>/dev/null | grep -i "CA:TRUE" || true)
+    ext_usage=$(openssl x509 -in "$cert" -noout -ext extendedKeyUsage 2>/dev/null || true)
+    
+    if [[ -n "$is_ca" ]]; then
+      if [[ "$name" == "$issuer" ]]; then
+        type="rootca"
+      elif openssl x509 -in "$cert" -noout -ext basicConstraints 2>/dev/null | grep -q "pathlen:0"; then
+        type="intermediate"
+      else
+        type="ca"
+      fi
+    elif echo "$ext_usage" | grep -Ei "serverAuth|Server Authentication" >/dev/null; then
+      type="server"
+    elif echo "$ext_usage" | grep -Ei "clientAuth|Client Authentication" >/dev/null; then
+      type="client"
+    fi
 
-    local name;
-    name=$(openssl x509 -in "$cert" -noout -subject -nameopt sep_multiline | grep -i "^ *CN=" | sed 's/^ *CN=//')
-
-    local issuer;
-    issuer=$(openssl x509 -in "$cert" -noout -issuer -nameopt sep_multiline | grep -i "^ *CN=" | sed 's/^ *CN=//')
     if [[ "$name" == "$issuer" ]] || [[ -z "$issuer" ]]; then
       issuer="N/A"
     fi
 
-    local enddate;
+    local enddate iso_date
     enddate=$(openssl x509 -in "$cert" -noout -enddate | cut -d= -f2)
-    local iso_date;
     iso_date=$(date -j -f "%b %e %H:%M:%S %Y %Z" "$enddate" "+%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "$enddate")
 
     # Update dynamic column widths
     if (( ${#name} > max_name )); then max_name=${#name}; fi
     if (( ${#iso_date} > max_date )); then max_date=${#iso_date}; fi
     if (( ${#issuer} > max_issuer )); then max_issuer=${#issuer}; fi
+    if (( ${#type} > max_type )); then max_type=${#type}; fi
 
     if [[ -n "$is_ca" ]]; then
       ca_names+=("$name")
       ca_dates+=("$iso_date")
       ca_issuers+=("$issuer")
-      total_certs=$((total_certs + 1))
+      ca_types+=("$type")
     else
       client_names+=("$name")
       client_dates+=("$iso_date")
       client_issuers+=("$issuer")
-      total_certs=$((total_certs + 1))
+      client_types+=("$type")
     fi
+    total_certs=$((total_certs + 1))
   done < <(find "$OUTPUT_DIR" -type f -name "*.pem" 2>/dev/null)
 
   local ca_count=${#ca_names[@]}
   local client_count=${#client_names[@]}
 
   echo -e "${BOLD}Root/Intermediate CAs${RESET}"
-  printf "${BOLD}%-${max_name}s | %-${max_date}s | %s${RESET}\n" "Name" "Expiration Date Time" "Issuer"
-
+  printf "${BOLD}%-${max_type}s | %-${max_name}s | %-${max_date}s | %s${RESET}\n" "Type" "Name" "Validity Not After" "Issuer"
   if [[ $ca_count -eq 0 ]]; then
     echo -e "${RED}N/A${RESET}"
   else
@@ -643,14 +653,14 @@ cmd_info() {
       local iss="${ca_issuers[$i]}"
       local iss_color="${MAGENTA}"
       if [[ "$iss" == "N/A" ]]; then iss_color="${RED}"; fi
-      printf "${CYAN}%-${max_name}s${RESET} | ${GREEN}%-${max_date}s${RESET} | ${iss_color}%s${RESET}\n" "${ca_names[$i]}" "${ca_dates[$i]}" "$iss"
+      printf "${RED}%-${max_type}s${RESET} | ${CYAN}%-${max_name}s${RESET} | ${GREEN}%-${max_date}s${RESET} | ${iss_color}%s${RESET}\n" \
+        "${ca_types[$i]}" "${ca_names[$i]}" "${ca_dates[$i]}" "$iss"
     done
   fi
 
   echo ""
   echo -e "${BOLD}Client Certificates${RESET}"
-  printf "${BOLD}%-${max_name}s | %-${max_date}s | %s${RESET}\n" "Name" "Expiration Date Time" "Issuer"
-
+  printf "${BOLD}%-${max_type}s | %-${max_name}s | %-${max_date}s | %s${RESET}\n" "Type" "Name" "Validity Not After" "Issuer"
   if [[ $client_count -eq 0 ]]; then
     echo -e "${RED}N/A${RESET}"
   else
@@ -658,7 +668,8 @@ cmd_info() {
       local iss="${client_issuers[$i]}"
       local iss_color="${MAGENTA}"
       if [[ "$iss" == "N/A" ]]; then iss_color="${RED}"; fi
-      printf "${CYAN}%-${max_name}s${RESET} | ${GREEN}%-${max_date}s${RESET} | ${iss_color}%s${RESET}\n" "${client_names[$i]}" "${client_dates[$i]}" "$iss"
+      printf "${RED}%-${max_type}s${RESET} | ${CYAN}%-${max_name}s${RESET} | ${GREEN}%-${max_date}s${RESET} | ${iss_color}%s${RESET}\n" \
+        "${client_types[$i]}" "${client_names[$i]}" "${client_dates[$i]}" "$iss"
     done
   fi
 
