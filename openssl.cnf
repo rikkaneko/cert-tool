@@ -62,7 +62,6 @@ keyUsage = critical, digitalSignature, cRLSign, keyCertSign
 
 [ server_cert ]
 basicConstraints = CA:FALSE
-nsCertType = server
 subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid
 keyUsage = critical, digitalSignature, keyEncipherment
@@ -70,7 +69,6 @@ extendedKeyUsage = serverAuth
 
 [ client_cert ]
 basicConstraints = CA:FALSE
-nsCertType = client
 subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid
 keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment

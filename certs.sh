@@ -662,7 +662,7 @@ cmd_renew() {
     local days=$DEFAULT_CERT_DAYS
     if [[ -n "$is_ca" ]]; then days=$DEFAULT_CA_DAYS; fi
     local is_server;
-    is_server=$(openssl x509 -in "$cert_file" -noout -ext extendedKeyUsage 2>/dev/null | grep -i "serverAuth" || true)
+    is_server=$(openssl x509 -in "$cert_file" -noout -ext extendedKeyUsage 2>/dev/null | grep -Ei "TLS Web Server Authentication" || true)
 
     local ext="client_cert"
     if [[ -n "$is_ca" ]]; then ext="v3_intermediate_ca"
