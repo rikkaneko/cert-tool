@@ -32,6 +32,7 @@ DEFAULT_CERT_FILE=${CERT_FILENAME:-"certs.pem"};
 DEFAULT_CHAIN_FILE=${CHAIN_FILENAME:-"fullchain.pem"};
 DEFAULT_SECRET_FILE=${SECRET_FILENAME:-"secret.txt"};
 DEFAULT_CACHED_CNF=${CACHED_CNF_FILENAME:-"openssl.cnf"};
+DEFAULT_POSTINSTALL_CONF=${POSTINSTALL_CONF_FILENAME:-"postinstall.conf"};
 
 # ANSI Color Codes
 CYAN='\033[0;36m'
@@ -111,9 +112,12 @@ print_help() {
     echo -e "${BOLD}Optional Options:${RESET}";
     echo -e "  ${GREEN}--expiration${RESET}       Expiration time (e.g., 30d, 1y) (default: ${DEFAULT_CERT_DAYS}d)";
     echo -e "  ${GREEN}--cipher${RESET}           Encryption cipher for private key (e.g., aes256) (default: ${DEFAULT_CIPHER})";
-    echo -e "  ${GREEN}--no-password${RESET}      Do not encrypt the private key (Default for server/client certs)";
+    echo -e "  ${GREEN}--no-password${RESET}      Do not encrypt the private key [Default for server/client certs]";
     echo -e "  ${GREEN}--random-password${RESET}  Generate a random password and store it in ${SECRET_FILENAME}";
     echo -e "  ${GREEN}--openssl-config-file${RESET} Provide a custom OpenSSL configuration file";
+    echo -e "  ${GREEN}--install-fullchain${RESET}  Path to install the full certificate chain";
+    echo -e "  ${GREEN}--install-privkey${RESET}    Path to install the private key";
+    echo -e "  ${GREEN}--post-script${RESET}        Script to run after generation (receives cert dir as \$1)";
     echo -e "  ${GREEN}--output-dir${RESET}       Output directory for the generated certificates (e.g., ./my_certs)";
     echo -e "  ${GREEN}--force${RESET}            Overwrite existing certificate and key if they exist";
   elif [[ "$cmd" == "info" ]]; then
@@ -128,6 +132,9 @@ print_help() {
     echo -e "  ${GREEN}--name${RESET}             Common Name for the certificate to renew (e.g., \"demo.example.com\")";
     echo -e "${BOLD}Optional Options:${RESET}";
     echo -e "  ${GREEN}--openssl-config-file${RESET} Provide a custom OpenSSL configuration file (required if original cert used one)";
+    echo -e "  ${GREEN}--install-fullchain${RESET}  Path to install the full certificate chain (overrides cache)";
+    echo -e "  ${GREEN}--install-privkey${RESET}    Path to install the private key (overrides cache)";
+    echo -e "  ${GREEN}--post-script${RESET}        Script to run after renewal (overrides cache)";
   else
     echo -e "Usage: $0 ${CYAN}<subcommand>${RESET} [${GREEN}options${RESET}]";
     echo -e "${BOLD}Subcommands:${RESET}";
@@ -198,6 +205,59 @@ setup_dir_and_pass() {
     echo "Generated random password at $out_dir/$DEFAULT_SECRET_FILE";
   fi;
   OUT_CERT_DIR="$out_dir";
+}
+
+run_deployment() {
+  local cert_dir="$1";
+  local install_fullchain="${2:-}";
+  local install_privkey="${3:-}";
+  local post_script="${4:-}";
+
+  local conf_file="$cert_dir/$DEFAULT_POSTINSTALL_CONF";
+
+  # Load from cache if not provided as arguments
+  if [[ -f "$conf_file" ]]; then
+    # Use grep/sed to read values safely instead of source to avoid malicious execution if file is compromised
+    # or just source it since it's our own controlled environment
+    source "$conf_file";
+  fi
+
+  # Override with current run arguments if provided
+  if [[ -n "$install_fullchain" ]]; then INSTALL_FULLCHAIN="$install_fullchain"; fi
+  if [[ -n "$install_privkey" ]]; then INSTALL_PRIVKEY="$install_privkey"; fi
+  if [[ -n "$post_script" ]]; then POST_SCRIPT="$post_script"; fi
+
+  # Save/Update cache if any deployment option is set
+  if [[ -n "${INSTALL_FULLCHAIN:-}" ]] || [[ -n "${INSTALL_PRIVKEY:-}" ]] || [[ -n "${POST_SCRIPT:-}" ]]; then
+    echo "Saving deployment configuration to $conf_file"
+    cat > "$conf_file" <<EOF
+INSTALL_FULLCHAIN='${INSTALL_FULLCHAIN:-}'
+INSTALL_PRIVKEY='${INSTALL_PRIVKEY:-}'
+POST_SCRIPT='${POST_SCRIPT:-}'
+EOF
+    chmod 600 "$conf_file"
+  fi
+
+  # Perform installation
+  if [[ -n "${INSTALL_FULLCHAIN:-}" ]]; then
+    echo "Installing fullchain to $INSTALL_FULLCHAIN"
+    cp "$cert_dir/$DEFAULT_CHAIN_FILE" "$INSTALL_FULLCHAIN"
+  fi
+
+  if [[ -n "${INSTALL_PRIVKEY:-}" ]]; then
+    echo "Installing private key to $INSTALL_PRIVKEY"
+    cp "$cert_dir/$DEFAULT_PRIVKEY_FILE" "$INSTALL_PRIVKEY"
+  fi
+
+  # Run post-script
+  if [[ -n "${POST_SCRIPT:-}" ]]; then
+    if [[ -x "$POST_SCRIPT" ]]; then
+      echo "Running post-install script: $POST_SCRIPT"
+      "$POST_SCRIPT" "$cert_dir"
+    else
+      echo -e "${YELLOW}Warning: Post-install script $POST_SCRIPT not found or not executable.${RESET}" >&2
+    fi
+  fi
 }
 
 resolve_ca() {
@@ -390,6 +450,9 @@ cmd_certs() {
   local force="";
   local random_pass="";
   local custom_cnf="";
+  local install_fullchain="";
+  local install_privkey="";
+  local post_script="";
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -401,6 +464,9 @@ cmd_certs() {
       --no-password) no_pass="true"; shift 1;;
       --random-password) random_pass="true"; shift 1;;
       --openssl-config-file) custom_cnf="$2"; shift 2;;
+      --install-fullchain) install_fullchain="$2"; shift 2;;
+      --install-privkey) install_privkey="$2"; shift 2;;
+      --post-script) post_script="$2"; shift 2;;
       --output-dir) custom_out_dir="$2"; shift 2;;
       --force) force="true"; shift 1;;
       --help) print_help certs; exit 0;;
@@ -470,6 +536,8 @@ cmd_certs() {
 
   cat "$cert_file" "$CA_CHAIN" > "$chain_file"
   cp "$conf_file" "$OUT_CERT_DIR/$DEFAULT_CACHED_CNF"
+
+  run_deployment "$OUT_CERT_DIR" "$install_fullchain" "$install_privkey" "$post_script"
 
   echo -e "$purpose certificate created at ${GREEN}${cert_file}${RESET}";
 }
@@ -601,10 +669,16 @@ cmd_info() {
 cmd_renew() {
   local name=""
   local custom_cnf=""
+  local install_fullchain=""
+  local install_privkey=""
+  local post_script=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --name) name="$2"; shift 2;;
       --openssl-config-file) custom_cnf="$2"; shift 2;;
+      --install-fullchain) install_fullchain="$2"; shift 2;;
+      --install-privkey) install_privkey="$2"; shift 2;;
+      --post-script) post_script="$2"; shift 2;;
       --help) print_help renew; exit 0;;
       *) echo "Unknown option $1" >&2; print_help renew; exit 1;;
     esac
@@ -677,6 +751,9 @@ cmd_renew() {
     openssl x509 -req -in "$csr_file" -CA "$CA_CERT" -CAkey "$CA_KEY" $ca_pass_in -CAcreateserial -out "${cert_file}.new" -days "$days" -extfile "$conf_file" -extensions "$ext"
     mv "${cert_file}.new" "$cert_file"
     cat "$cert_file" "$CA_CHAIN" > "$chain_file" 2>/dev/null || true
+
+    run_deployment "$cert_dir" "$install_fullchain" "$install_privkey" "$post_script"
+
     echo -e "Certificate renewed at ${GREEN}${cert_file}${RESET}"
   fi
 }
